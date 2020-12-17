@@ -43,7 +43,6 @@ build_kernel () {
 
   log "Pulling kernel build scripts"
   git clone "$KERNEL_REPO" "$LOCAL_REPO" 2> /dev/null || git -C "$LOCAL_REPO" pull
-  # scripts_repo_cloned=1
   cd $LOCAL_REPO || exit
 
   if [[ ! -f system.sh ]]; then
@@ -67,7 +66,24 @@ install_kernel () {
   log "Installing kernel"
   cp ${LOCAL_REPO}/deploy/*.Image ${MOUNT_PATH}/boot/
   
+  log "Installing device tree"
+  tar xvf --strip-components=2 \
+    ${LOCAL_REPO}/deploy/*-dtbs.tar.gz \
+    ./marvell/armada-3720-espressobin.dtb \
+    -C ${MOUNT_PATH}/boot/
+  
+  log "Creating kernel symlinks"
+  ln -s ${MOUNT_PATH}/boot/*.Image \
+    ${MOUNT_PATH}/boot/Image
+  ln -s ${MOUNT_PATH}/boot/armada-3720-espressobin.dtb \
+    ${MOUNT_PATH}/boot/armada-3720-community.dtb
+
+  log "Copying kernel config"
+  cp ${LOCAL_REPO}/deploy/config-* ${MOUNT_PATH}/boot/
+  
   log "Installing kernel modules"
+  tar xvf ${LOCAL_REPO}/deploy/*-modules.tar.gz \
+    -C ${MOUNT_PATH}/
 }
 
 clean_byproducts () {
@@ -116,3 +132,5 @@ if [ $clean -eq 1 ]; then
   fi
   clean_byproducts
 fi
+
+# EOF

@@ -41,6 +41,11 @@
 # Constants
 DISK_PATH=0
 MOUNT_PATH=/mnt/gentoo
+COMPILER_PATH=/usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/gcc-bin/10.2.0
+BINUTILS_PATH=/usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/binutils-bin/2.35.1
+TARGET_ARCH=aarch64-unknown-linux-gnu
+REMOTE_REPO=https://github.com/sarnold/arm64-multiplatform
+KERNEL_REPO=arm64-multiplatform
 
 # Argument default values
 verbose=0
@@ -61,16 +66,16 @@ mount_disk () {
     sudo mkdir ${MOUNT_PATH}
     mountpoint_created=1
   fi
-  sudo mount ${DISK_PATH}1 ${MOUNT_PATH}
+  sudo mount ${DISK_PATH}1 ${MOUNT_PATH} || exit 5
 }
 
 umount_disk () {
-  sudo umount $MOUNT_PATH
+  sudo umount $MOUNT_PATH || exit 6
 }
 
 cleanup () {
   if [ $mountpoint_created -eq 1 ]; then
-    sudo rm $MOUNT_PATH
+    [ -f $MOUNT_PATH ] && sudo rm $MOUNT_PATH
   fi
 }
 
@@ -89,36 +94,44 @@ done
 trap cleanup EXIT
 
 # Call subscripts in correct order for correct users
+if [ "$DISK_PATH" -eq 0 ]; then
+  echo "ERROR: disk path required" >&2
+  exit 4
+fi
 
 # Build and fix crossdev (root)
-# sudo \
-# ./bin/ebin_crossdev.sh -v -c -f
-#   -A aarch64-unknown-linux-gnu⇧
-#   -G /usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/gcc-bin/10.2.0
-#   -B /usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/binutils-bin/2.35.1
+sudo \
+./bin/ebin_crossdev.sh -v -c -f \
+  -A "$TARGET_ARCH" \
+  -G "$COMPILER_PATH" \
+  -B "$BINUTILS_PATH"
 
 # Build the kernel
-# ./bin/ebin_kernel.sh -v -b \
-#   -A aarch64-unknown-linux-gnu⇧
-#   -L arm64-multiplatform
-#   -R https://github.com/sarnold/arm64-multiplatform
-#   -G /usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/gcc-bin/10.2.0
-
+./bin/ebin_kernel.sh -v -b \
+  -A "$TARGET_ARCH" \
+  -L "$KERNEL_REPO" \
+  -R "$REMOTE_REPO" \
+  -G "$COMPILER_PATH"
 
 # Provision the disk and system
-# sudo \
-# ./bin/ebin_provision.sh -v -d -p \
-#   -D /dev/sdb \
-#   -M /mnt/gentoo
+sudo \
+./bin/ebin_provision.sh -v -d \
+  -D "$MOUNT_PATH"
+mount_disk
+sudo \
+./bin/ebin_provision.sh -v -p \
+  -D "$DISK_PATH" \
+  -M "$MOUNT_PATH"
 
 # Install the kernel and delete the build repo
-# sudo \
-# ./bin/ebin_kernel.sh -i -C \
-#   -M /mnt/gentoo
+sudo \
+./bin/ebin_kernel.sh -i -C \
+  -M "$MOUNT_PATH"
 
 # Configure the system
-# sudo \
-# ./bin/ebin_provision.sh -v -s \
-#   -M /mnt/gentoo
+sudo \
+./bin/ebin_provision.sh -v -s \
+  -M "$MOUNT_PATH"
+umount_disk
 
 # EOF

@@ -7,9 +7,9 @@
 
 
 # Constants
-COMPILER_PATH=/usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/gcc-bin/10.2.0
-BINUTILS_PATH=/usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/binutils-bin/2.35.1
-TARGET_ARCH=aarch64-unknown-linux-gnu
+COMPILER_PATH=0
+BINUTILS_PATH=0
+TARGET_ARCH=0
 
 # Argument default values
 verbose=0
@@ -44,18 +44,29 @@ fix_crossdev () {
 while [[ $# -gt 0 ]]; do
   opt="$1"
   case "$opt" in
-    "-v"|"--verbose"	) verbose=1; shift;;
-    "-c"|"--crossdev" ) crossdev=1; shift;;
-    "-f"|"--fix"      ) fix=1; shift;;
+    "-v"|"--verbose"	      ) verbose=1; shift;;
+    "-c"|"--crossdev"       ) crossdev=1; shift;;
+    "-f"|"--fix"            ) fix=1; shift;;
+    "-G"|"--gcc-path"       ) COMPILER_PATH=$2; shift;shift;;
+    "-B"|"--binutils-path"  ) BINUTILS_PATH=$2; shift;shift;;
+    "-A"|"--arch"           ) TARGET_ARCH=$2; shift;shift;;
     *			) echo "ERROR: Invalid option: \"$opt"\" >&2
       exit 3;;
   esac
 done
 
 if [ $crossdev -eq 1 ]; then
+  if [ "$TARGET_ARCH" -eq 0 ]; then
+    echo "ERROR: target architecture required" >&2
+    exit 4
+  fi
   build_crossdev
 fi
 
 if [ $fix -eq 1 ]; then
+  if [ "$COMPILER_PATH" -eq 0 ] || [ "$BINUTILS_PATH" -eq 0 ]; then
+    echo "ERROR: one or more required arguments missing" >&2
+    exit 4
+  fi
   fix_crossdev
 fi

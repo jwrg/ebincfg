@@ -16,10 +16,9 @@
 # process will be interrupted at least once.  Specifically,
 # the user will be prompted to the following actions:
 # - menuconfig for the kernel steps (ESC ESC ENTER)
-# Before destructive disk operations, there will be a pause
+# Before destructive disk operations, there will be a prompt
 # so that the user can attest as to the correctness of the
-# device being altered.  This is a pause, not a prompt.
-# The user is expected to know how to CTRL+C.
+# device being altered. 
 
 # Switches (no switches does naught):  
 # -v for verbose
@@ -94,9 +93,17 @@ trap cleanup EXIT
 # Build and fix crossdev (root)
 # sudo \
 # ./bin/ebin_crossdev.sh -v -c -f
+#   -A aarch64-unknown-linux-gnu⇧
+#   -G /usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/gcc-bin/10.2.0
+#   -B /usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/binutils-bin/2.35.1
 
 # Build the kernel
-# ./bin/ebin_kernel.sh -v -b
+# ./bin/ebin_kernel.sh -v -b \
+#   -A aarch64-unknown-linux-gnu⇧
+#   -L arm64-multiplatform
+#   -R https://github.com/sarnold/arm64-multiplatform
+#   -G /usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/gcc-bin/10.2.0
+
 
 # Provision the disk and system
 # sudo \

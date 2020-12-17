@@ -9,18 +9,21 @@
 
 # Switches (no switches does naught):
 # -v for verbose
+# -A for target arch (req'd)
+# -L for local repo path (req'd for build)
+# -R for remote repo URI (req'd for build)
 # -M positional arg for disk mount path (req'd for install)
+# -G for compiler path
 # -b for build step
 # -i for install step (req's root)
-# -C for local repo deletion
+# -C for local repo deletion 
 
 # Constants
-COMPILER_PATH=/usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/gcc-bin/10.2.0
-KERNEL_PATH=./arm64_multiplatform/deploy
+COMPILER_PATH=0
 MOUNT_PATH=0
-KERNEL_REPO=https://github.com/sarnold/arm64-multiplatform
-LOCAL_REPO=arm64-multiplatform
-TARGET_ARCH=aarch64-unknown-linux-gnu
+KERNEL_REPO=0
+LOCAL_REPO=0
+TARGET_ARCH=0
 
 # Argument default values
 verbose=0
@@ -62,37 +65,54 @@ build_kernel () {
 
 install_kernel () {
   log "Installing kernel"
-  cp ${KERNEL_PATH}/*.Image ${MOUNT_PATH}/boot/
+  cp ${LOCAL_REPO}/deploy/*.Image ${MOUNT_PATH}/boot/
   
   log "Installing kernel modules"
 }
 
 clean_byproducts () {
   log "Deleting scripts directory"
-  rm -fr $KERNEL_REPO
+  [ -f $LOCAL_REPO ] && rm -fr $LOCAL_REPO
 }
 
 while [[ $# -gt 0 ]]; do
   opt="$1"
   case "$opt" in
     "-v"|"--verbose"	    ) verbose=1; shift;;
-    "-M"|"--mount-path"   ) MOUNT_PATH=$2; shift;shift;;
     "-b"|"--build"        ) build=1; shift;;
     "-i"|"--install"      ) install=1; shift;;
     "-C"|"--clean"        ) clean=1; shift;;
+    "-M"|"--mount-path"   ) MOUNT_PATH=$2; shift;shift;;
+    "-G"|"--gcc-path"     ) COMPILER_PATH=$2; shift;shift;;
+    "-A"|"--target-arch"  ) TARGET_ARCH=$2; shift;shift;;
+    "-L"|"--local-repo"   ) LOCAL_REPO=$2; shift;shift;;
+    "-R"|"--remote-repo"  ) KERNEL_REPO=$2; shift;shift;;
     *			) echo "ERROR: Invalid option: \"$opt"\" >&2
       exit 3;;
   esac
 done
 
 if [ $build -eq 1 ]; then
+  if [ "$COMPILER_PATH" -eq 0 ] || [ "$TARGET_ARCH" -eq 0 ] ||\
+    [ "$KERNEL_REPO" -eq 0 ] || [ "$LOCAL_REPO" -eq 0 ]; then
+    echo "ERROR: one or more required arguments missing" >&2
+    exit 4
+  fi
   build_kernel
 fi
 
 if [ $install -eq 1 ]; then
+  if [ "$LOCAL_REPO" -eq 0 ] || [ "$MOUNT_PATH" -eq 0 ]; then
+    echo "ERROR: one or more required arguments missing" >&2
+    exit 4
+  fi
   install_kernel
 fi
 
 if [ $clean -eq 1 ]; then
+  if [ "$LOCAL_REPO" -eq 0 ]; then
+    echo "ERROR: local repo path required" >&2
+    exit 4
+  fi
   clean_byproducts
 fi

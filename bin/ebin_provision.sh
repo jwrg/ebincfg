@@ -28,14 +28,15 @@ setup_disk () {
   log "Device to be OVERWRITTEN is $DISK_PATH"
   echo "dd if=/dev/zero of=${DISK_PATH} bs=1M count=10"
   echo "This is your last chance to double check that this"
-  echo "command is correct"
-  sleep 5
-  echo ""
-  echo "Seriously, last chance"
-  sleep 5
-  echo ""
-  echo "Okay, here goes!"
-  sleep 5
+  echo "command is correct."
+  while true; do
+    read -rp "Do you wish to proceed? [y/n]" confirm
+    case $confirm in
+      [Yy]* ) break;;
+      [Nn]* ) exit;;
+      * ) echo "Please answer y/n.";;
+    esac
+  done
   log "sudo dd if=/dev/zero of=${DISK_PATH} bs=1M count=10"
   sudo dd if=/dev/zero of=${DISK_PATH} bs=1M count=10
 
@@ -93,13 +94,25 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ $disk -eq 1 ]; then
+  if [ "$DISK_PATH" -eq 0 ] || [ "$MOUNT_PATH" -eq 0 ]; then
+    echo "ERROR: one or more required arguments missing" >&2
+    exit 4
+  fi
   setup_disk
 fi
 
 if [ $prepare -eq 1 ]; then
+  if [ "$DISK_PATH" -eq 0 ] || [ "$MOUNT_PATH" -eq 0 ]; then
+    echo "ERROR: one or more required arguments missing" >&2
+    exit 4
+  fi
   prepare_system
 fi
 
 if [ $setup -eq 1 ]; then
+  if [ "$DISK_PATH" -eq 0 ] || [ "$MOUNT_PATH" -eq 0 ]; then
+    echo "ERROR: one or more required arguments missing" >&2
+    exit 4
+  fi
   configure_system
 fi

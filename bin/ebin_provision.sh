@@ -94,16 +94,16 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ $disk -eq 1 ]; then
-  if [ "$DISK_PATH" -eq 0 ] || [ "$MOUNT_PATH" -eq 0 ]; then
-    echo "ERROR: one or more required arguments missing" >&2
+  if [ "$DISK_PATH" -eq 0 ]; then
+    echo "ERROR: disk block device path required" >&2
     exit 4
   fi
   setup_disk
 fi
 
 if [ $prepare -eq 1 ]; then
-  if [ "$DISK_PATH" -eq 0 ] || [ "$MOUNT_PATH" -eq 0 ]; then
-    echo "ERROR: one or more required arguments missing" >&2
+  if [ "$MOUNT_PATH" -eq 0 ]; then
+    echo "ERROR: disk mountpoint path required" >&2
     exit 4
   fi
   prepare_system
@@ -116,3 +116,5 @@ if [ $setup -eq 1 ]; then
   fi
   configure_system
 fi
+
+# EOF

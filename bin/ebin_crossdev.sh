@@ -2,7 +2,7 @@
 
 # Switches (no switches does naught):  
 
-# -c for the crossdev step
+# -b for the crossdev build step
 # -f for fixing symlinks for crossdev
 
 
@@ -34,18 +34,24 @@ fix_crossdev () {
   log "Creating missing symlinks for $TARGET_ARCH"
   for p in objdump objcopy strip ar as ld
   do
-    log 'ln -s "'$BINUTILS_PATH/$p'" "'$COMPILER_PATH/$TARGET_ARCH-$p
-    sudo ln -s "$BINUTILS_PATH/$p" "$COMPILER_PATH/$TARGET_ARCH-$p"
+    TARGET=$BINUTILS_PATH/$p
+    LINK_NAME=$COMPILER_PATH/$TARGET_ARCH-$p
+    if [[ ! -f $LINK_NAME ]]; then
+      log 'ln -s "'$TARGET'" "'$LINK_NAME
+      sudo ln -s "$TARGET" "$LINK_NAME"
+    fi
   done
-  log 'ln -s "'$COMPILER_PATH/$TARGET_ARCH-gcc-nm'" "'$COMPILER_PATH/$TARGET_ARCH-nm
-  sudo ln -s "$COMPILER_PATH/$TARGET_ARCH-gcc-nm" "$COMPILER_PATH/$TARGET_ARCH-nm"
+  if [[ ! -f $COMPILER_PATH/$TARGET_ARCH-nm ]]; then
+    log 'ln -s "'$COMPILER_PATH/$TARGET_ARCH-gcc-nm'" "'$COMPILER_PATH/$TARGET_ARCH-nm
+    sudo ln -s "$COMPILER_PATH/$TARGET_ARCH-gcc-nm" "$COMPILER_PATH/$TARGET_ARCH-nm"
+  fi
 }
 
 while [[ $# -gt 0 ]]; do
   opt="$1"
   case "$opt" in
     "-v"|"--verbose"	      ) verbose=1; shift;;
-    "-c"|"--crossdev"       ) crossdev=1; shift;;
+    "-b"|"--build"          ) crossdev=1; shift;;
     "-f"|"--fix"            ) fix=1; shift;;
     "-G"|"--gcc-path"       ) COMPILER_PATH=$2; shift;shift;;
     "-B"|"--binutils-path"  ) BINUTILS_PATH=$2; shift;shift;;
@@ -70,3 +76,5 @@ if [ $fix -eq 1 ]; then
   fi
   fix_crossdev
 fi
+
+# EOF

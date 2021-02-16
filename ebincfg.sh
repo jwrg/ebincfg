@@ -19,6 +19,9 @@
 # Before destructive disk operations, there will be a prompt
 # so that the user can attest as to the correctness of the
 # device being altered. 
+# It is also the user's responsibility to ensure that the
+# values in the script for the location and version of their
+# crossdev setup for the arch in question.
 
 # Switches (no switches does naught):  
 # -v for verbose
@@ -33,16 +36,21 @@
 # -k to specify kernel repo
 
 # Assumptions made (these can change as functionality is added):
-# - /etc/portage files have been correctly made into directories already
+# - The user has built their own crossdev for target arch
+#     -> check location and version under "Constants" below
+# - /etc/portage files have been correctly made into 
+#   directories already
 # - the user does not maintain a kernel tree using git
 # - the following software packages are installed and working:
-# - git, parted, sudo, wget
+#     git, parted, sudo, wget
 
 # Constants
 DISK_PATH=0
 MOUNT_PATH=/mnt/gentoo
-COMPILER_PATH=/usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/gcc-bin/10.2.0
-BINUTILS_PATH=/usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/binutils-bin/2.35.1
+COMPILER_PATH=/usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/gcc-bin/
+COMPILER_VERSION=10.2.0
+BINUTILS_PATH=/usr/x86_64-pc-linux-gnu/aarch64-unknown-linux-gnu/binutils-bin/
+BINUTILS_VERSION=2.35.2
 TARGET_ARCH=aarch64-unknown-linux-gnu
 REMOTE_REPO=https://github.com/sarnold/arm64-multiplatform
 KERNEL_REPO=arm64-multiplatform
@@ -99,19 +107,19 @@ if [ "$DISK_PATH" -eq 0 ]; then
   exit 4
 fi
 
-# Build and fix crossdev (root)
+# Fix crossdev (root)
 sudo \
-./bin/ebin_crossdev.sh -v -c -f \
+./bin/ebin_crossdev.sh -v -f \
   -A "$TARGET_ARCH" \
-  -G "$COMPILER_PATH" \
-  -B "$BINUTILS_PATH"
+  -G "${COMPILER_PATH}${COMPILER_VERSION}" \
+  -B "${BINUTILS_PATH}${BINUTILS_VERSION}"
 
 # Build the kernel
 ./bin/ebin_kernel.sh -v -b \
   -A "$TARGET_ARCH" \
   -L "$KERNEL_REPO" \
   -R "$REMOTE_REPO" \
-  -G "$COMPILER_PATH"
+  -G "${COMPILER_PATH}${COMPILER_VERSION}"
 
 # Provision the disk and system
 sudo \

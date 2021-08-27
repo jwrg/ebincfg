@@ -8,7 +8,7 @@ those running Gentoo on EspressoBin hardware.
 
 The procedure contained in the script has been
 lifted from the Gentoo wiki:
-[Gentoo Wiki EspressoBin Page](https://wiki.gentoo.org/wiki/ESPRESSOBin#Fetch.2C_Configure_and_Build_the_Kernel)
+[Gentoo Wiki EspressoBin Page](https://wiki.gentoo.org/wiki/ESPRESSOBin)
 
 ## Scripts
 Top-level scripts intended to be run (and read) by
